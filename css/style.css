@@ -1,5 +1,4 @@
 *{
-    white-space: pre-line;
     margin: 0;
     padding: 0;
     box-sizing: border-box;
@@ -18,14 +17,18 @@ header{
     justify-content: flex-start;
     border-bottom: 1px solid #ccc;
 }
-header h1{
-    margin: 0 20px;
+header > h1{
+    margin-left: 20px;
+    margin-right: 20px;
     color: #fff;
 }
-header a {
+header, h1, button, body{
+    margin-top: 0px;
+}
+header > a {
     text-decoration: none;
 }
-header form{
+header > form{
     display: flex;
     align-items: center;
 }
@@ -67,7 +70,6 @@ img{
 }
 
 button{
-    
     margin-left: 20px;
     font-weight: bold;
     width: 200px;
