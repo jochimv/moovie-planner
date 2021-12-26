@@ -1,5 +1,3 @@
-
-
 const apiUrl = 'https://api.themoviedb.org/3/discover/movie?sort_by=popularity.desc&api_key=04c35731a5ee918f014970082a0088b1&page=1';
 const IMGPATH = "https://image.tmdb.org/t/p/w1280";
 const SEARCHAPI =
@@ -13,18 +11,16 @@ const SEARCHAPI =
     showMovies(apiUrl);
 
     function showMovies(url){
+      main.empty();
+
         fetch(url).then(res => res.json())
         .then((data) => {
 
             data.results.forEach(element => {
             
-              console.log(getDurationById(element.id));
-            const duration = $('<div></div>').text(getDurationById(element.id) + ' min');
-
-            const container = $('<div></div>').addClass('container');
-            
-            const column1 = $('<div></div>').addClass('column');
-            const column2 = $('<div></div>').addClass('column');
+              const container = $('<div></div>').addClass('container');
+              const column1 = $('<div></div>').addClass('column');
+              const column2 = $('<div></div>').addClass('column');
     
             const image = document.createElement('img');
             image.src = IMGPATH + element.poster_path;
@@ -36,6 +32,7 @@ const SEARCHAPI =
                 convertToStars(element.vote_average)
             );
             
+            const releaseYear = $('<div></div>').html(`<strong>Release: </strong>${getReleaseYear(element.release_date)}`);
             const description = $('<div></div>').text(element.overview);
     
             const pickerContainer = $('<div></div>').addClass('picker-container');
@@ -52,20 +49,23 @@ const SEARCHAPI =
             const timeInput = $('<input/>').attr('type','time');
 
             timeRow.append(timeText,timeInput);
-    
-            const submitButton = $('<button></button>').addClass('submit-button').text('Add to google calendar').click(() => {
-                console.log(timeInput.val());
-                console.log(dateInput.val());
+
+            getDurationById(element.id).then((length) => {
+              const duration =  $('<div></div>').html(`<strong>Length: </strong> ${length} min`);
+              const submitButton = $('<button></button>').addClass('submit-button').text('Add to google calendar').click(() => {
+              let startDateString = calculateEndDateString(dateInput.val(),timeInput.val(),0);
+              let endDateString = calculateEndDateString(dateInput.val(),timeInput.val(),length);
+                console.log(startDateString);
+                console.log(endDateString);
 
                 var event = {
                   'summary': `Watch ${element.title}`,
-                //  'description': 'A chance to hear more about Google\'s developer products.',
                   'start': {
-                  'dateTime': `${dateInput.val()}T${timeInput.val()}:00-00:00`,
+                  'dateTime': `${startDateString}-00:00`,
                   'timeZone': 'Europe/Prague'
                   },
                   'end': {
-                  'dateTime': '2021-12-25T23:59:00-00:00',
+                  'dateTime': `${endDateString}-00:00`,
                   'timeZone': 'Europe/Prague'
                   },
                   'reminders': {
@@ -84,22 +84,52 @@ const SEARCHAPI =
 
                   
                 request.execute(function(event) {
-                console.log('Event created: ' + event.htmlLink);
+                  alert(`${element.title} was added to your google calendar!
+                  \nDate: ${convertToEuropeDate(dateInput.val())}
+                  \nTime: ${timeInput.val()}`);
               });
          
             });
-    
-            pickerContainer.append(dateRow,timeRow,submitButton);
-    
-            column1.append(name,rating,duration,description,pickerContainer);
-    
-            container.append(column1,column2);
-            main.append(container);
-            
+              column1.append(name,rating,duration,releaseYear,description,pickerContainer);
+              pickerContainer.append(dateRow,timeRow,submitButton);
+              container.append(column1,column2);
+              main.append(container);
+            }); 
         }); 
     });
+    };
+
+    const convertToEuropeDate = (dateInput) => {
+      const dateValues = dateInput.split('-');
+      let humanReadableDate = [];
+      for(let i = dateValues.length - 1; i >= 0; i--){
+        humanReadableDate.push(dateValues[i]);
+      }
+      return humanReadableDate.join('/');
+    };
+
+    const calculateEndDateString = (dateString,timeString,minutes) => {
+      const date = new Date(dateString + 'T' + timeString);
+      return addMinutes(date,minutes);
     }
-    
+
+    const addMinutes = (date, minutes) => {
+      return transferDateToGoogleApiString(new Date(date.getTime() + minutes * 60000));
+    }
+
+
+    const transferDateToGoogleApiString = (date) => {
+      const isoString = date.toISOString();
+      const isoArray = isoString.split('.');
+      console.log(isoArray[0]);
+      return isoArray[0];
+    }
+
+    const getReleaseYear = (releaseDate) => {
+      const fullDate = releaseDate.split('-');
+      return fullDate[0];
+    }
+
     const convertToStars = (rating) => {
         const numberOfStars = Math.round(rating / 2);
         let stars = '';
@@ -111,23 +141,22 @@ const SEARCHAPI =
     
     button.click((e) => {
         e.preventDefault();
-        main.empty();
          
-        const searchTerm = search.val();
-    
-        if (searchTerm) {
-            showMovies(SEARCHAPI + searchTerm);
-            search.value = searchTerm;
-        }
+        showMovies(SEARCHAPI + search.val());
+    });
+
+    form.submit((e) => {
+      e.preventDefault();
+      showMovies(SEARCHAPI + search.val());
     });
 
     const getDurationById = (movieId) => {
-      fetch(`https://api.themoviedb.org/3/movie/${movieId}?api_key=04c35731a5ee918f014970082a0088b1`).then(res => res.json())
+      return fetch(`https://api.themoviedb.org/3/movie/${movieId}?api_key=04c35731a5ee918f014970082a0088b1`).then(res => res.json())
       .then(data => {
-        const duration = data.runtime; 
-        console.log(duration);
-        return duration;
+        duration = data.runtime;
+          return duration;
       });
+    
     };
    
 
@@ -203,58 +232,3 @@ const SEARCHAPI =
     gapi.auth2.getAuthInstance().signOut();
   }
 
-  /**
-   * Append a pre element to the body containing the given message
-   * as its text node. Used to display the results of the API call.
-   *
-   * @param {string} message Text to be placed in pre element.
-  
-  function appendPre(message) {
-    var pre = document.getElementById('content');
-    var textContent = document.createTextNode(message + '\n');
-    pre.appendChild(textContent);
-  }
-
- */
-  // Refer to the JavaScript quickstart on how to setup the environment:
-// https://developers.google.com/calendar/quickstart/js
-// Change the scope to 'https://www.googleapis.com/auth/calendar' and delete any
-// stored credentials.
-
-
-/*
-eventButton.addEventListener('click', (event) => {
-  var event = {
-    'summary': 'Google I/O 2015',
-    'description': 'A chance to hear more about Google\'s developer products.',
-    'start': {
-    'dateTime': '2021-12-24T09:00:00-07:00',
-    'timeZone': 'Europe/Prague'
-    },
-    'end': {
-    'dateTime': '2021-12-24T17:00:00-07:00',
-    'timeZone': 'Europe/Prague'
-    },
-    'reminders': {
-    'useDefault': false,
-    'overrides': [
-      {'method': 'email', 'minutes': 24 * 60},
-      {'method': 'popup', 'minutes': 10}
-    ]
-    }
-    };
-
-  var request = gapi.client.calendar.events.insert({
-    'calendarId': 'primary',
-    'resource': event
-    });
-    
-    //tady bude potvrzení o tom, že se event úspěšně přidal
-
-    request.execute(function(event) {
-    appendPre('Event created: ' + event.htmlLink);
-    });
-
-});
-
-*/
