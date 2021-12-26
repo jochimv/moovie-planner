@@ -23,6 +23,10 @@ header > h1{
     margin-right: 20px;
     color: #fff;
 }
+h2{
+    margin-top:10px;
+}
+
 header, h1, button, body{
     margin-top: 0px;
 }
@@ -36,16 +40,17 @@ header > form{
 #search{
     width: 230px;
     height: 30px;
-    border: 1px solid black;
     outline: none;
     padding-left: 15px;
 }
 main{
-    width: 100%;
     display: flex;
     flex-wrap: wrap;
     justify-content: center;
+    align-items:center;
+    height: auto;
 }
+
 .container, .row {
     display:flex;
     flex-direction: row;
@@ -56,12 +61,12 @@ main{
     display: flex;
     flex-direction: column;
     width: 50%;
-    margin:10px 10px;
+    margin:20px 20px;
     align-items: center;
     justify-content: center;
 }
 
-img{
+img, .missing{
     display: block;
     max-width:230px;
     max-height:500px;
@@ -69,6 +74,11 @@ img{
     height: auto;
 
 }
+.missing{
+    width: 230px;
+    height: 500px;
+}
+
 
 button{
     margin-left: 20px;
@@ -76,7 +86,7 @@ button{
     width: 200px;
     padding: 5px;
 }
-.rating, .submit-result{
+.rating{
     color:red;
     font-size: 20px;
 }
@@ -91,4 +101,14 @@ button{
 }
 .picker-container > .row > p{
     margin-right: 10px;
+}
+.missing{
+    font-weight: bold;
+}
+.length{
+    margin-top: 5px;
+    margin-bottom:5px;
+}
+.release-year{
+    margin-bottom:5px;
 }
