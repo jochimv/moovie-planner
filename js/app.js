@@ -15,77 +15,75 @@ function showMovies(url) {
   const loader = $('<div></div>').addClass('loader');
   main.append(loader);
   fetch(url).then((res) => {
-    if(res.ok){
+    if (res.ok) {
       return res.json();
     } else {
       throw new Error('Something went wrong');
     }
-  })
-    .then((data) => {
-      main.empty();
-      if (data.total_results == 0) {
+  }).then((data) => {
+    main.empty();
+    if (data.total_results == 0) {
 
-        const emptyText = $('<h2>No movies found.</h2>').addClass('no-movies');
-        main.append(emptyText);
+      const emptyText = $('<h2>No movies found.</h2>').addClass('no-movies');
+      main.append(emptyText);
+    } else {
 
-      } else {
-        data.results.forEach(element => {
 
-          const container = $('<div></div>').addClass('container');
-          const column1 = $('<div></div>').addClass('column');
-          const column2 = $('<div></div>').addClass('column');
+      data.results.forEach(element => {
 
-          let image = undefined;
+        const container = $('<div></div>').addClass('container');
+        const column1 = $('<div></div>').addClass('column');
+        const column2 = $('<div></div>').addClass('column');
 
-          if (element.poster_path == null) {
-            image = $('<div></div>').text('Poster for this moovie is missing').addClass('missing');
-          } else {
-            image = $('<img/>').attr('src', IMGPATH + element.poster_path).attr('alt', `Poster of ${element.title}`);
-          }
-          column2.append(image);
+        let image = undefined;
 
-          const name = $('<h2></h2>').text(element.title);
+        if (element.poster_path == null) {
+          image = $('<div></div>').text('Poster for this moovie is missing').addClass('missing');
+        } else {
+          image = $('<img/>').attr('src', IMGPATH + element.poster_path).attr('alt', `Poster of ${element.title}`);
+        }
+        column2.append(image);
 
-          const rating = $('<div></div>').addClass('rating').html(
-            convertToStars(element.vote_average)
-          );
+        const name = $('<h2></h2>').text(element.title);
 
-          const releaseYear = $('<div></div>').html(`<strong>Release: </strong>${getReleaseYear(element.release_date)}`).addClass('release-year');
-          const description = $('<div></div>').text(element.overview);
+        const rating = $('<div></div>').addClass('rating').html(
+          convertToStars(element.vote_average)
+        );
 
-          const pickerContainer = $('<div></div>').addClass('picker-container');
+        const releaseYear = $('<div></div>').html(`<strong>Release: </strong>${getReleaseYear(element.release_date)}`).addClass('release-year');
+        const description = $('<div></div>').text(element.overview).addClass('description');
 
-          const dateRow = $('<div></div>').addClass('row');
-          const dateText = $('<p></p>').html('<strong>Select a date:</strong>');
+        const pickerContainer = $('<div></div>').addClass('picker-container');
 
-          const dateInput = $('<input/>').attr('type', 'date');
+        const dateRow = $('<div></div>').addClass('row');
+        const dateText = $('<p></p>').html('<strong>Select a date:</strong>');
 
-          dateRow.append(dateText, dateInput);
+        const dateInput = $('<input/>').attr('type', 'date');
 
-          const timeRow = $('<div></div>').addClass('row');
-          const timeText = $('<p></p>').html('<strong>Select a time:</strong>');
-          const timeInput = $('<input/>').attr('type', 'time');
+        dateRow.append(dateText, dateInput);
 
-          timeRow.append(timeText, timeInput);
+        const timeRow = $('<div></div>').addClass('row');
+        const timeText = $('<p></p>').html('<strong>Select a time:</strong>');
+        const timeInput = $('<input/>').attr('type', 'time');
 
-          getDurationById(element.id).then((length) => {
-            let lenghtText = length == 0 ? 'unknown' : `${length} min`;
-            const duration = $('<div></div>').html(`<strong>Length: </strong> ${lenghtText}`).addClass('length');
-            const submitButton = $('<button></button>').addClass('submit-button').text('Add to google calendar').click(() => {
+        timeRow.append(timeText, timeInput);
 
-              if (gapi.auth2.getAuthInstance().isSignedIn.get()) {
+        getDurationById(element.id).then((length) => {
+          let lenghtText = length == 0 ? 'unknown' : `${length} min`;
+          const duration = $('<div></div>').html(`<strong>Length: </strong> ${lenghtText}`).addClass('length');
+          const submitButton = $('<button></button>').addClass('submit-button').text('Add to google calendar').click(() => {
+            if (gapi.auth2.getAuthInstance().isSignedIn.get()) {
 
-                if (dateInput.val() == '' && timeInput.val() == '') {
-                  alert('Enter date and time first.');
-                } else if (dateInput.val() == '') {
-                  alert('Enter date first.');
-                } else if (timeInput.val() == '') {
-                  alert('Enter time first.');
-                };
+              if (dateInput.val() == '' && timeInput.val() == '') {
+                alert('Enter date and time first.');
+              } else if (dateInput.val() == '') {
+                alert('Enter date first.');
+              } else if (timeInput.val() == '') {
+                alert('Enter time first.');
+              } else {
                 let startDateString = calculateEndDateString(dateInput.val(), timeInput.val(), 0);
                 let endDateString = calculateEndDateString(dateInput.val(), timeInput.val(), length);
 
-                console.log(gapi.auth2.getAuthInstance().isSignedIn.get());
                 var event = {
                   'summary': `Watch ${element.title}`,
                   'start': {
@@ -104,34 +102,35 @@ function showMovies(url) {
                     ]
                   }
                 };
-
-                var request = gapi.client.calendar.events.insert({
-                  'calendarId': 'primary',
-                  'resource': event
-                });
-
-
-                request.execute(function (event) {
-                  alert(`${element.title} was added to your google calendar!
-                  \nDate: ${convertToEuropeDate(dateInput.val())}
-                  \nTime: ${timeInput.val()}`);
-                });
-
-              } else {
-                alert('Log in to your google account first.')
               }
-            });
-            column1.append(name, rating, duration, releaseYear, description, pickerContainer);
-            pickerContainer.append(dateRow, timeRow, submitButton);
-            container.append(column1, column2);
-            main.append(container);
+
+              var request = gapi.client.calendar.events.insert({
+                'calendarId': 'primary',
+                'resource': event
+              });
+
+
+              request.execute(function (event) {
+                alert(`${element.title} was added to your google calendar!
+                    \nDate: ${convertToEuropeDate(dateInput.val())}
+                    \nTime: ${timeInput.val()}`);
+              });
+
+            } else {
+              alert('Log in to your google account first.')
+            }
           });
+          column1.append(name, rating, duration, releaseYear, description, pickerContainer);
+          pickerContainer.append(dateRow, timeRow, submitButton);
+          container.append(column1, column2);
+          main.append(container);
         });
-      };
-    }).catch((error) => {
-      main.empty();
-      main.append('<h2>Something went wrong.</h2>');
-    });
+      });
+    };
+  }).catch((error) => {
+    main.empty();
+    main.append('<h2>Something went wrong.</h2>');
+  });
 };
 
 const convertToEuropeDate = (dateInput) => {
@@ -160,7 +159,6 @@ const transferDateToGoogleApiString = (date) => {
 }
 
 const getReleaseYear = (releaseDate) => {
-  console.log(releaseDate);
   const fullDate = releaseDate.split('-');
   return fullDate[0] != '' ? fullDate[0] : 'unknown';
 }
@@ -265,4 +263,3 @@ function handleAuthClick(event) {
 function handleSignoutClick(event) {
   gapi.auth2.getAuthInstance().signOut();
 }
-

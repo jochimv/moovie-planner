@@ -9,6 +9,9 @@ body{
     flex-direction: column;
     flex-wrap: wrap;
 }
+.description{
+    text-align: justify;
+}
 header{
     width: 100%;
     height: 50px;
