@@ -12,9 +12,17 @@ showMovies(apiUrl);
 
 function showMovies(url) {
   main.empty();
-
-  fetch(url).then(res => res.json())
+  const loader = $('<div></div>').addClass('loader');
+  main.append(loader);
+  fetch(url).then((res) => {
+    if(res.ok){
+      return res.json();
+    } else {
+      throw new Error('Something went wrong');
+    }
+  })
     .then((data) => {
+      main.empty();
       if (data.total_results == 0) {
 
         const emptyText = $('<h2>No movies found.</h2>').addClass('no-movies');
@@ -120,6 +128,9 @@ function showMovies(url) {
           });
         });
       };
+    }).catch((error) => {
+      main.empty();
+      main.append('<h2>Something went wrong.</h2>');
     });
 };
 
@@ -145,7 +156,6 @@ const addMinutes = (date, minutes) => {
 const transferDateToGoogleApiString = (date) => {
   const isoString = date.toISOString();
   const isoArray = isoString.split('.');
-  console.log(isoArray[0]);
   return isoArray[0];
 }
 
