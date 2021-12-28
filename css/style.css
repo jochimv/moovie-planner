@@ -51,7 +51,7 @@ header>form {
     width: 230px;
     height: 30px;
     outline: none;
-    color:grey;
+    padding-left: 10px;
 }
 
 html,
@@ -259,14 +259,11 @@ button {
     }
     
     header{
-        flex-direction: column;
         height: auto;
         padding-top: 10px;
         padding-bottom: 10px;
     }
-    .buttons{
-        padding-top: 10px;
-    }
+    
     .column-poster{
         margin-bottom:0px;
     }

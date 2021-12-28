@@ -7,12 +7,12 @@ const main = $('#main');
 const form = $('#form');
 const search = $('#search');
 const button = $('#search-button');
-const html = $('html'); 
 
 const mediaQuery = window.matchMedia('(max-width:725px)');
+const mediaQueryBig = window.matchMedia('(min-width:725px)'); 
 
 if (mediaQuery.matches) {
-  search.val('enter a moovie name');
+  search.val('enter a movie name');
   search.click(() => {
     search.val('');
   });
@@ -20,14 +20,19 @@ if (mediaQuery.matches) {
 
   mediaQuery.addEventListener('change', event => {
     if (event.matches && search.val() == '') {
-      search.val('enter a moovie name');
+      search.val('enter a movie name');
       search.click(() => {
         search.val('');
       });
-    } else {
+    } 
+  });
+
+  mediaQueryBig.addEventListener('change', event => {
+    if (event.matches && search.val() == 'enter a movie name'){
       search.val('');
     }
   });
+
 
   const showMovies = (url) => {
     main.empty();
