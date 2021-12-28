@@ -1,124 +1,181 @@
-*{
+* {
     margin: 0;
     padding: 0;
     box-sizing: border-box;
     font-family: Arial, Helvetica, sans-serif;
 }
-body{
+
+body {
     display: flex;
     flex-direction: column;
     flex-wrap: wrap;
 }
-.description{
+
+.description {
     text-align: justify;
 }
-header{
+
+header {
     width: 100%;
-    height: 50px;
+    height: 55px;
     background: gray;
     display: flex;
     align-items: center;
-    justify-content: flex-start;
-    border-bottom: 1px solid #ccc;
-}
-header > h1{
-    margin-left: 20px;
-    margin-right: 20px;
-    color: #fff;
-}
-h2{
-    margin-top:10px;
+    justify-content: center;
+    padding-top:20px;
+    padding-bottom:20px;
 }
 
-header, h1, button, body{
+#movie-sign {
+    margin-left: 20px;
+    margin-right: 20px;
+    color: white;
+    font-size: 30px;
+    font-weight: 700;
+}
+
+h2 {
+    margin-top: 10px;
+}
+
+header, #movie-sign, body {
     margin-top: 0px;
 }
-header > a {
-    text-decoration: none;
-}
-header > form{
+
+header>form {
     display: flex;
     align-items: center;
 }
-#search{
+
+#search {
     width: 230px;
     height: 30px;
     outline: none;
-    padding-left: 15px;
-}
-html,
-body {
-  height: 100%;
-  margin: 0;
-}
-body{
-    display: flex;
-  flex-flow: column;
+    color:grey;
 }
 
-header{
+html,
+body {
+    height: 100%;
+    margin: 0;
+}
+
+body {
+    display: flex;
+    flex-flow: column;
+}
+
+header {
     flex: 0 1 auto;
 }
-#main{
+
+#main {
     flex: 1 1 auto;
-    display:flex;
+    display: flex;
     flex-direction: column;
     align-items: center;
     justify-content: center;
 }
 
 .container, .row {
-    display:flex;
+    display: flex;
     flex-direction: row;
     width: 100%;
 }
 .container{
-    padding-left:100px;
-}
-.row{
-    margin-left: 100px;
-}
-.column{
-    display: flex;
-    flex-direction: column;
-    width: 50%;
-    margin:20px 20px;
     align-items: center;
     justify-content: center;
 }
 
-img, .missing{
+.row{
+    align-items: left;
+    justify-content: left;
+}
+
+
+.column-text, .column-poster {
+    display: flex;
+    flex-direction: column;
+    margin: 20px 20px;
+    align-items: center;
+    justify-content: center;
+    padding-right: 2.5%;
+    padding-left: 2.5%;
+}
+.column-text{
+    flex-grow: 2;
+}
+.column-poster{
+    flex-grow:1;
+}
+
+img, .missing {
     display: block;
-    max-width:230px;
-    max-height:500px;
+    max-width: 230px;
+    max-height: 500px;
     width: auto;
     height: auto;
 }
 
 
-
-button{
-    margin-left: 20px;
+button {
     font-weight: bold;
-    width: 200px;
-    padding: 5px;
+    margin-left: 20px;
+    cursor: pointer;
 }
-.rating{
-    color:red;
+
+.submit-button{
+    padding:10px;
+    border-radius: 8px;
+    border: 0 solid white;
+    background-color: grey;
+    color:white;
+}
+
+
+#login-button, #logout-button{
+    text-align: right;
+    width: 100px;
+    padding:14px 10px 10px 10px;
+    background: white url(../images/cal_logo.png) 0px 0px no-repeat;    
+    border: 0 solid white;
+    border-radius: 8px;
+    font-size: 14px;
+}
+#logout-button{
+    width: 105px;
+}
+
+#search-button{
+    text-align: right;
+    width: 100px;
+    padding:14px 10px 10px 10px;
+    background: white url(../images/magnifying_glass.png) 5px 5px no-repeat;    
+    border: 0 solid white;
+    border-radius: 8px;
+    font-size: 14px;
+
+}
+
+.rating {
+    color: red;
     font-size: 20px;
 }
-.picker-container{
-    display:flex;
+
+.pickers {
+    display: flex;
     flex-direction: column;
     margin-top: 20px;
     align-items: center;
-    justify-content: center;
+    justify-content: left;
     row-gap: 10px;
 }
-.picker-container > .row > p{
+
+.pickers>.row>p {
     margin-right: 10px;
 }
-.missing{
+
+.missing {
     display: flex;
     align-items: center;
     justify-content: center;
@@ -127,50 +184,106 @@ button{
     height: 500px;
     text-align: center;
 }
-.length{
+
+.length {
     margin-top: 5px;
-    margin-bottom:5px;
+    margin-bottom: 5px;
 }
-.release-year{
-    margin-bottom:5px;
+
+.release-year {
+    margin-bottom: 5px;
 }
 
 
 .loader,
 .loader:after {
-  border-radius: 50%;
-  width: 10em;
-  height: 10em;
+    border-radius: 50%;
+    width: 10em;
+    height: 10em;
 }
+
 .loader {
-  margin: 60px auto;
-  font-size: 10px;
-  position: relative;
-  text-indent: -9999em;
-  border-top: 1.1em solid rgba(255, 255, 255, 0.2);
-  border-right: 1.1em solid rgba(255, 255, 255, 0.2);
-  border-bottom: 1.1em solid rgba(255, 255, 255, 0.2);
-  border-left: 1.1em solid grey;
-  transform: translateZ(0);
-  animation: load8 1.1s infinite linear;
+    margin: 60px auto;
+    font-size: 10px;
+    position: relative;
+    text-indent: -9999em;
+    border-top: 1.1em solid rgba(255, 255, 255, 0.2);
+    border-right: 1.1em solid rgba(255, 255, 255, 0.2);
+    border-bottom: 1.1em solid rgba(255, 255, 255, 0.2);
+    border-left: 1.1em solid grey;
+    transform: translateZ(0);
+    animation: load8 1.1s infinite linear;
 }
+
+.buttons{
+    display:flex;
+    flex-direction: row;
+    align-items: center;
+    justify-content: center;
+}
+
+
 @-webkit-keyframes load8 {
-  0% {
-    -webkit-transform: rotate(0deg);
-    transform: rotate(0deg);
-  }
-  100% {
-    -webkit-transform: rotate(360deg);
-    transform: rotate(360deg);
-  }
+    0% {
+        -webkit-transform: rotate(0deg);
+        transform: rotate(0deg);
+    }
+
+    100% {
+        -webkit-transform: rotate(360deg);
+        transform: rotate(360deg);
+    }
 }
+
 @keyframes load8 {
-  0% {
-    -webkit-transform: rotate(0deg);
-    transform: rotate(0deg);
-  }
-  100% {
-    -webkit-transform: rotate(360deg);
-    transform: rotate(360deg);
-  }
+    0% {
+        -webkit-transform: rotate(0deg);
+        transform: rotate(0deg);
+    }
+
+    100% {
+        -webkit-transform: rotate(360deg);
+        transform: rotate(360deg);
+    }
+}
+
+@media screen and (max-width:725px){
+    .container{
+        flex-direction: column;
+    }
+    .column-poster{
+        order:1;
+    }
+    .column-text{
+        order:2;
+    }
+    
+    header{
+        flex-direction: column;
+        height: auto;
+        padding-top: 10px;
+        padding-bottom: 10px;
+    }
+    .buttons{
+        padding-top: 10px;
+    }
+    .column-poster{
+        margin-bottom:0px;
+    }
+    .column-text{
+        margin-top: 0px;
+    }
+    #movie-sign{
+        display: none;
+    }
+    
+}
+
+@media screen and (max-width:820px){
+    #movie-sign{
+        font-size: 20px;
+    }
+    .movie-title{
+        text-align: center;
+    }
 }
