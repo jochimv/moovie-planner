@@ -12,31 +12,14 @@ const mediaQuery = window.matchMedia('(max-width:725px)');
 const mediaQueryBig = window.matchMedia('(min-width:725px)');
 
 const showMovies = (url) => {
-  appendLoader();
-  fetch(url).then((res) => {
-    if (res.ok) {
-      return res.json();
-    } else {
-      throw new Error('Something went wrong');
-    }
-  }).then((data) => {
-    main.empty();
-    if (data.total_results == 0) {
-      appendNoMoviesFound();
-    } else {
-      data.results.forEach(element => {
-        createMovieDom(element);
-      });
-    };
-  }).catch((error) => {
-    main.empty();
-    if (search.val().trim() == '') {
-      appendNoMoviesFound();
-    } else {
-      appendSomethingWentWrong();
-    }
-  });
-};
+  main.empty();
+  try {
+    appendLoader();
+    createResultPage(url);
+  } catch (e) {
+    appendSomethingWentWrong();
+  }
+}
 
 const convertToEuropeanDate = (dateInput) => {
   const dateValues = dateInput.split('-');
@@ -47,25 +30,28 @@ const convertToEuropeanDate = (dateInput) => {
   return humanReadableDate.join('/');
 };
 
-const calculateEndDateString = (dateString, timeString, minutes) => {
-  const date = new Date(dateString + 'T' + timeString);
-  return addMinutes(date, minutes);
+const getGoogleDatetimeString = (dateString, timeString, minutes) => {
+  let date = new Date(dateString + 'T' + timeString);
+  date = addMinutesToDate(date, minutes);
+  return turnDateToIsoFormat(date);
 }
 
-const addMinutes = (date, minutes) => {
-  return transferDateToGoogleApiString(new Date(date.getTime() + minutes * 60000));
+const addMinutesToDate = (date, minutes) => {
+  return new Date(date.getTime() + minutes * 60000);
 }
 
-
-const transferDateToGoogleApiString = (date) => {
+const turnDateToIsoFormat = (date) => {
   const isoString = date.toISOString();
   const isoArray = isoString.split('.');
   return isoArray[0];
 }
 
 const getReleaseYear = (releaseDate) => {
-  const fullDate = releaseDate.split('-');
-  return fullDate[0] != '' ? fullDate[0] : 'unknown';
+  if (releaseDate == undefined || releaseDate == '') {
+    return 'unknown';
+  } else {
+    return releaseDate.split('-')[0];
+  }
 }
 
 const convertToStars = (rating) => {
@@ -77,41 +63,30 @@ const convertToStars = (rating) => {
   return stars;
 }
 
-button.click((e) => {
-  e.preventDefault();
 
-  showMovies(SEARCHAPI + search.val().trim());
-});
-
-form.submit((e) => {
-  e.preventDefault();
-  showMovies(SEARCHAPI + search.val().trim());
-});
-
-const getDurationById = (movieId) => {
-  return fetch(`https://api.themoviedb.org/3/movie/${movieId}?api_key=04c35731a5ee918f014970082a0088b1`).then(res => res.json())
-    .then(data => {
-      duration = data.runtime;
-      return duration;
-    });
+const getLengthFromId = async (movieId) => {
+  const data = await $.getJSON(`https://api.themoviedb.org/3/movie/${movieId}?api_key=04c35731a5ee918f014970082a0088b1`);
+  return data.runtime;
 };
 
 const appendNoMoviesFound = () => {
+  main.empty();
   const emptyText = $('<h2>No movies found.</h2>').addClass('no-movies');
   main.append(emptyText);
 }
 
 const appendLoader = () => {
-  main.empty();
+  const loaderWrapper = $('<div></div>').addClass('loader-wrapper');
   const loader = $('<div></div>').addClass('loader');
-  main.append(loader);
+  loaderWrapper.append(loader);
+  main.append(loaderWrapper);
 }
 
 const appendSomethingWentWrong = () => {
   main.append('<h2>Something went wrong.</h2>');
 }
 
-const createMovieDom = (element) => {
+const createMovieDom = async (element) => {
   const container = $('<div></div>').addClass('container');
   const columnText = $('<div></div>').addClass('column-text');
   const columnPoster = $('<div></div>').addClass('column-poster');
@@ -126,110 +101,55 @@ const createMovieDom = (element) => {
     convertToStars(element.vote_average)
   );
 
-  const releaseYear = $('<div></div>').html(`<strong>Release: </strong>${getReleaseYear(element.release_date)}`).addClass('release-year');
+  const releaseYear = $('<div></div>').html(
+    `<strong>Release: </strong>${getReleaseYear(element.release_date)}`
+  ).addClass('release-year');
+
   const description = $('<div></div>').text(element.overview).addClass('description');
 
   const pickers = $('<div></div>').addClass('pickers');
 
   const dateRow = $('<div></div>').addClass('row');
   const dateText = $('<p></p>').html('<strong>Select a date:</strong>');
-
   const dateInput = $('<input/>').attr('type', 'date');
-
   dateRow.append(dateText, dateInput);
 
   const timeRow = $('<div></div>').addClass('row');
   const timeText = $('<p></p>').html('<strong>Select a time:</strong>');
   const timeInput = $('<input/>').attr('type', 'time');
-
   timeRow.append(timeText, timeInput);
 
-  getDurationById(element.id).then((length) => {
-    let lenghtText = length == 0 ? 'unknown' : `${length} min`;
-    const duration = $('<div></div>').html(`<strong>Length: </strong> ${lenghtText}`).addClass('length');
-    const submitButton = $('<button></button>').addClass('submit-button').text('Add to google calendar').click(() => {
-      if (gapi.auth2.getAuthInstance().isSignedIn.get()) {
+  let length = await getLengthFromId(element.id);
+  let lenghtText = (length == 0 || length == undefined) ? 'unknown' : `${length} min`;
+  const lengthDiv = $('<div></div>').html(`<strong>Length: </strong> ${lenghtText}`).addClass('length');
 
-        if (dateInput.val() == '' && timeInput.val() == '') {
-          Swal.fire({
-            title: 'Error!',
-            text: 'Enter date and time first',
-            icon: 'error',
-            confirmButtonText: 'Ok',
-            confirmButtonColor: 'grey'
-          });
-        } else if (dateInput.val() == '') {
-          Swal.fire({
-            title: 'Error!',
-            text: 'Enter date first',
-            icon: 'error',
-            confirmButtonText: 'Ok',
-            confirmButtonColor: 'grey'
-          });
-        } else if (timeInput.val() == '') {
-          Swal.fire({
-            title: 'Error!',
-            text: 'Enter time first',
-            icon: 'error',
-            confirmButtonText: 'Ok',
-            confirmButtonColor: 'grey'
-          });
-        } else {
-          let startDateString = calculateEndDateString(dateInput.val(), timeInput.val(), 0);
-          let endDateString = calculateEndDateString(dateInput.val(), timeInput.val(), length);
-
-          const event = createEvent(element, startDateString, endDateString);
-          insertEvent(event, element, dateInput, timeInput);
-        }
+  const submitButton = $('<button></button>')
+    .addClass('submit-button')
+    .text('Add to google calendar')
+    .click(() => {
+      if (isSignedIn()) {
+        createButtonListener(dateInput, timeInput, length, element);
       } else {
-        Swal.fire({
-          title: 'Error!',
-          text: 'Log in to your google account first',
-          icon: 'error',
-          confirmButtonText: 'Ok',
-          confirmButtonColor: 'grey'
-        });
+        promptToLogIn();
       }
     });
-    lengthAndRelease.append(duration, releaseYear);
-    columnText.append(name, rating, lengthAndRelease, description, pickers);
-    pickers.append(dateRow, timeRow, submitButton);
-    container.append(columnText, columnPoster);
-    main.append(container);
-  });
-}
 
-const insertEvent = (event, element, dateInput, timeInput) => {
-  var request = gapi.client.calendar.events.insert({
-    'calendarId': 'primary',
-    'resource': event
-  });
-
-  request.execute(() => {
-    Swal.fire({
-      title: 'Event added!',
-      html: `${element.title} has been added to your google calendar!
-      <div id="alert-datetime">
-      <strong>Date:</strong> ${convertToEuropeanDate(dateInput.val())}
-      <strong>Time:</strong> ${timeInput.val()}
-      </div>`,
-      icon: 'success',
-      confirmButtonText: 'Ok',
-      confirmButtonColor: 'grey'
-    });
-  });
+  lengthAndRelease.append(lengthDiv, releaseYear);
+  columnText.append(name, rating, lengthAndRelease, description, pickers);
+  pickers.append(dateRow, timeRow, submitButton);
+  container.append(columnText, columnPoster);
+  main.append(container);
 };
 
-const createEvent = (element, startDateString, endDateString) => {
+
+const createEvent = (element, dateInput, timeInput, length) => {
   return {
     'summary': `Watch ${element.title}`,
     'start': {
-      'dateTime': `${startDateString}-00:00`,
-      'timeZone': 'Europe/Prague'
+      'dateTime': `${getGoogleDatetimeString(dateInput.val(), timeInput.val(), 0)}-00:00`
     },
     'end': {
-      'dateTime': `${endDateString}-00:00`,
-      'timeZone': 'Europe/Prague'
+      'dateTime': `${getGoogleDatetimeString(dateInput.val(), timeInput.val(), length)}-00:00`
     },
     'reminders': {
       'useDefault': false,
@@ -240,8 +160,6 @@ const createEvent = (element, startDateString, endDateString) => {
     }
   };
 };
-
-
 
 const createPoster = (element) => {
   let image = undefined;
@@ -254,7 +172,8 @@ const createPoster = (element) => {
   return image;
 }
 
-const initialQuerySetup = () => {
+const initialSetup = () => {
+  addFormListeners();
   initialQueryCheck();
   addResolutionChangeListeners();
 }
@@ -293,6 +212,164 @@ const addListenerSmallScreen = () => {
   });
 }
 
+const appendNoInternet = () => {
+  Swal.fire({
+    title: 'Error!',
+    text: 'No internet connection',
+    icon: 'error',
+    confirmButtonText: 'Ok',
+    confirmButtonColor: 'grey'
+  });
+}
 
-initialQuerySetup();
+const appendSuccessMesage = (element, dateInput, timeInput) => {
+  Swal.fire({
+    title: 'Event added!',
+    html: `${element.title} has been added to your google calendar!
+      <div id="alert-datetime">
+      <strong>Date:</strong> ${convertToEuropeanDate(dateInput.val())}
+      <strong>Time:</strong> ${timeInput.val()}
+      </div>`,
+    icon: 'success',
+    confirmButtonText: 'Ok',
+    confirmButtonColor: 'grey'
+  });
+}
+
+const promptToLogIn = () => {
+  Swal.fire({
+    title: 'Error!',
+    text: 'Log in to your google account first',
+    icon: 'error',
+    confirmButtonText: 'Ok',
+    confirmButtonColor: 'grey'
+  });
+}
+
+const appendNoTime = () => {
+  Swal.fire({
+    title: 'Error!',
+    text: 'Enter time first',
+    icon: 'error',
+    confirmButtonText: 'Ok',
+    confirmButtonColor: 'grey'
+  });
+}
+
+const appendNoDate = () => {
+  Swal.fire({
+    title: 'Error!',
+    text: 'Enter date first',
+    icon: 'error',
+    confirmButtonText: 'Ok',
+    confirmButtonColor: 'grey'
+  });
+}
+
+const appendNoDateAndTime = () => {
+  Swal.fire({
+    title: 'Error!',
+    text: 'Enter date and time first',
+    icon: 'error',
+    confirmButtonText: 'Ok',
+    confirmButtonColor: 'grey'
+  });
+}
+
+const addFormListeners = () => {
+  button.click((e) => {
+    e.preventDefault();
+    showMovies(SEARCHAPI + search.val().trim());
+  });
+
+  form.submit((e) => {
+    e.preventDefault();
+    showMovies(SEARCHAPI + search.val().trim());
+  });
+}
+
+
+const createResultPage = async (url) => {
+  if (inputIsEmpty() && isRegularSearch(url)) {
+    appendNoMoviesFound();
+  } else {
+    const data = await $.getJSON(url);
+    if (noMoviesFound(data)) {
+      appendNoMoviesFound();
+    } else {
+      createMovieContainers(data);
+    };
+  }
+}
+
+const createMovieContainers = (data) => {
+  main.empty();
+  data.results.forEach(element => {
+    createMovieDom(element);
+  });
+}
+
+const noMoviesFound = (data) => {
+  return data.total_results == 0;
+}
+
+const inputIsEmpty = () => {
+  return search.val().trim() == '';
+}
+
+const isSignedIn = () => {
+  return gapi.auth2.getAuthInstance().isSignedIn.get();
+}
+
+/**
+ * The website is initially loaded with user input having no value ->
+ * without this check, it would always show "No movies found".
+ * 
+ * returns true if api is called with user input
+ * 
+ * returns false if showMovies(url) was executed as initial webpage load 
+ */
+const isRegularSearch = (url) => {
+  return url != apiUrl;
+}
+
+const createButtonListener = (dateInput, timeInput, length, element) => {
+  if (emptyInput(dateInput) && emptyInput(timeInput)) {
+    appendNoDateAndTime();
+  } else if (emptyInput(dateInput)) {
+    appendNoDate();
+  } else if (emptyInput(timeInput)) {
+    appendNoTime();
+  } else if (!hasInternetConnection()) {
+    appendNoInternet();
+  } else {
+    createAndInsertEvent(dateInput, timeInput, length, element);
+  }
+}
+
+const insertEvent = (event, element, dateInput, timeInput) => {
+  var request = gapi.client.calendar.events.insert({
+    'calendarId': 'primary',
+    'resource': event
+  });
+
+  request.execute(() => {
+    appendSuccessMesage(element, dateInput, timeInput);
+  });
+}
+
+const hasInternetConnection = () => {
+  return navigator.onLine;
+}
+
+const createAndInsertEvent = (dateInput, timeInput, length, element) => {
+  const event = createEvent(element, dateInput, timeInput, length);
+  insertEvent(event, element, dateInput, timeInput);
+}
+
+const emptyInput = (dateInput) => {
+  return dateInput.val() == '';
+}
+
+initialSetup();
 showMovies(apiUrl);
