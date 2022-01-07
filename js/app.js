@@ -1,19 +1,48 @@
 $(document).ready(() => {
 
-  const apiUrl = 'https://api.themoviedb.org/3/discover/movie?sort_by=popularity.desc&api_key=04c35731a5ee918f014970082a0088b1&page=1';
   const IMGPATH = 'https://image.tmdb.org/t/p/w1280';
-  const SEARCHAPI =
-    'https://api.themoviedb.org/3/search/movie?&api_key=04c35731a5ee918f014970082a0088b1&query=';
+  const SEARCHURL = 'https://api.themoviedb.org/3/search/movie?&api_key=04c35731a5ee918f014970082a0088b1&query=';
 
   const main = $('#main');
   const form = $('#form');
   const search = $('#search');
   const button = $('#search-button');
+  const discoverButton = $('#discover-button')
 
-  const mediaQuery = window.matchMedia('(max-width:725px)');
-  const mediaQueryBig = window.matchMedia('(min-width:725px)');
+  const mediaQuery = window.matchMedia('(max-width:840px)');
+  const mediaQueryBig = window.matchMedia('(min-width:840px)');
+
+
+  const getDefaultUrl = () => {
+    return `https://api.themoviedb.org/3/discover/movie?sort_by=${localStorage.getItem('sort')}&api_key=04c35731a5ee918f014970082a0088b1&page=1`
+  }
+
+  discoverButton.click(async () => {
+
+    const { value: sortRule } = await Swal.fire({
+      title: 'Which movies are you looking for?',
+      input: 'radio',
+      inputValue: getDefaultOption(),
+      inputOptions: {
+        'Most popular': 'Most popular',
+        'Best': 'Best',
+        'Highest revenue': 'Highest revenue'
+      },
+      inputValidator: (value) => {
+        if (!value) {
+          return 'You need to choose something!'
+        }
+      }
+    })
+
+    if (sortRule) {
+      processSortRule(sortRule);
+      showMovies(getDefaultUrl());
+    }
+  });
 
   const showMovies = (url) => {
+    console.log(url);
     main.empty();
     try {
       appendLoader();
@@ -175,9 +204,16 @@ $(document).ready(() => {
   }
 
   const initialSetup = () => {
+    checkDefaultSortRule();
     addFormListeners();
     initialQueryCheck();
     addResolutionChangeListeners();
+  }
+
+  const checkDefaultSortRule = () => {
+    if (localStorage.getItem('sort') == null) {
+      localStorage.setItem('sort', 'popularity.desc');
+    }
   }
 
   const initialQueryCheck = () => {
@@ -281,12 +317,12 @@ $(document).ready(() => {
   const addFormListeners = () => {
     button.click((e) => {
       e.preventDefault();
-      showMovies(SEARCHAPI + search.val().trim());
+      showMovies(SEARCHURL + search.val().trim());
     });
 
     form.submit((e) => {
       e.preventDefault();
-      showMovies(SEARCHAPI + search.val().trim());
+      showMovies(SEARCHURL + search.val().trim());
     });
   }
 
@@ -332,7 +368,7 @@ $(document).ready(() => {
    * returns false if showMovies(url) was executed as initial webpage load 
    */
   const isRegularSearch = (url) => {
-    return url != apiUrl;
+    return url != getDefaultUrl();
   }
 
   const createButtonListener = (dateInput, timeInput, length, element) => {
@@ -373,7 +409,34 @@ $(document).ready(() => {
     return dateInput.val() == '';
   }
 
+  const getDefaultOption = () => {
+    switch (localStorage.getItem('sort')) {
+      case 'vote_average.desc':
+        return 'Best';
+      case 'popularity.desc':
+        return 'Most popular';
+      case 'revenue.desc':
+        return 'Highest revenue';
+    };
+  }
+
+  const processSortRule = (sortRule) => {
+    switch (sortRule) {
+      case 'Most popular':
+        window.localStorage.setItem('sort', 'popularity.desc');
+        break;
+      case 'Best':
+        window.localStorage.setItem('sort', 'vote_average.desc');
+        break;
+      case 'Highest revenue':
+        window.localStorage.setItem('sort', 'revenue.desc');
+        break;
+    }
+  }
+
+
   initialSetup();
-  showMovies(apiUrl);
+  showMovies(getDefaultUrl());
 
 });
+
