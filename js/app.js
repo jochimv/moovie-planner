@@ -42,7 +42,6 @@ $(document).ready(() => {
   });
 
   const showMovies = (url) => {
-    console.log(url);
     main.empty();
     try {
       appendLoader();
@@ -127,7 +126,6 @@ $(document).ready(() => {
     columnPoster.append(poster);
 
     const name = $('<h2></h2>').text(element.title).addClass('movie-title');
-
     const rating = $('<div></div>').addClass('rating').html(
       convertToStars(element.vote_average)
     );
@@ -150,6 +148,8 @@ $(document).ready(() => {
     const timeInput = $('<input/>').attr('type', 'time');
     timeRow.append(timeText, timeInput);
 
+    main.append(container);
+
     let length = await getLengthFromId(element.id);
     let lenghtText = (length == 0 || length == undefined) ? 'unknown' : `${length} min`;
     const lengthDiv = $('<div></div>').html(`<strong>Length: </strong> ${lenghtText}`).addClass('length');
@@ -169,7 +169,7 @@ $(document).ready(() => {
     columnText.append(name, rating, lengthAndRelease, description, pickers);
     pickers.append(dateRow, timeRow, submitButton);
     container.append(columnText, columnPoster);
-    main.append(container);
+    
   };
 
 
@@ -342,8 +342,8 @@ $(document).ready(() => {
 
   const createMovieContainers = (data) => {
     main.empty();
-    data.results.forEach(element => {
-      createMovieDom(element);
+    data.results.forEach(async (element) => {
+      await createMovieDom(element);
     });
   }
 
